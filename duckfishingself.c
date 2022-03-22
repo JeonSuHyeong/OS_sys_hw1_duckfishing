@@ -1,142 +1,201 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <windows.h>
+
 
 struct duck{
-    char name[12];
-    struct duck *nextPtr; //self
+    char d_name[8];
+    struct duck *nextDuck;
 };
 
 typedef struct duck Duck;
 typedef Duck *DuckPtr;
 
-//type of functions
+//functions
 void instructions();
-void fish_duck(DuckPtr *, char);
-char release_duck(DuckPtr *, char);
-void isEmpty();
-void show_ducks(DuckPtr *);
+void fish_duck(DuckPtr *);
+char release_duck(DuckPtr *);
+int isEmpty(DuckPtr);
+void show_ducks(DuckPtr);
+void animated_ducks(DuckPtr);
+
 
 int main(){
     //initial value
+    char name[8]; //string
     DuckPtr startPtr = NULL;
     int choice;
-    char duck_name[12];
+    int d_cnt = 0;
 
-    //display the menu and input the choice 
+    //instructions
     instructions();
     scanf("%d", &choice);
 
-    while(choice !=4){
+    while(choice!=4){
         switch (choice){
-            //case 1: fish a duck
+            //fishing a new duck
             case 1:
-                printf("Enter the name(max 12): \n");
-                scanf("%s", &duck_name);
-                fish_duck(&startPtr, duck_name);
-                show_ducks(startPtr);
-                break;
-
+               fish_duck(&startPtr);
+               system("cls");
+               d_cnt++;
+               break;
+            //release the duck
             case 2:
-                printf("Enter the name: \n");
-                printf("\n");
-                release_duck(&startPtr, duck_name);
+                release_duck(&startPtr);
+                system("cls");
+                d_cnt--;
                 break;
-
+            //show your ducks
             case 3:
-                show_duck(startPtr);
+                show_ducks(startPtr);
+                animated_ducks(startPtr);
                 break;
-
-            case 4:
-                printf("End the program\n");
-                break;
-
             default:
-                printf("Invaild choice \n\n");
-                instructions();
+                printf("Invaild choice.\n\n ");
                 break;
-
         }
-        printf("Any gesture?");
+        instructions();
         scanf("%d", &choice);
+        system("cls");
     }
-}
+    //end fishing
+    printf("Quit the program!\n");
+}   
+    
 
 void instructions(){
     printf("Enter your actions\n"
             "1 to fish a new duck\n"
             "2 to release the duck\n"
-            "3 to check your duck\n"
+            "3 to show your duck\n"
             "4 to finish duckfishing\n");
 }
 
-void isEmpty(DuckPtr *sPtr){
-        return sPtr == NULL;
-}
-void fish_duck(DuckPtr *sPtr, char d_name[12]){
-    DuckPtr newPtr, previousPtr, currentPtr;
-
-    //allocate memory
-    newPtr = (struct Duck*)malloc(sizeof(Duck));
+void fish_duck(DuckPtr *sPtr){
+    DuckPtr newDuck, previousDuck, currentDuck;
+    char name[8];
 
     //initial value
-    previousPtr = NULL;
-    currentPtr = sPtr;
+    previousDuck = NULL;
+    currentDuck = *sPtr;
 
-    if(newPtr!=NULL){   
-        //input name(string)       
-        strcpy(newPtr->name, d_name);
-        newPtr->nextPtr = NULL;
+    printf("Enter the name(max 8) :\n");
+    scanf("%s", name);
+    
 
-        previousPtr =NULL;
-        currentPtr = *sPtr;
+    //allocate memory
+    newDuck = malloc(sizeof(Duck));
 
-        //compare the name and find appropriate address
-        while ((currentPtr !=NULL ) && (strcmp(d_name, currentPtr->name)==1)){
-            previousPtr = currentPtr;
-            currentPtr = currentPtr ->nextPtr;
+    //check the memory
+    if(newDuck!=NULL){//1. space is available
+        //initial value
+        strcpy(newDuck->d_name, name);
+        newDuck->nextDuck = NULL;
+        previousDuck =NULL;
+        currentDuck = *sPtr;
+
+        //compare the string and find the location
+        while (currentDuck !=NULL && strcmp(name, currentDuck->d_name)==1){
+            previousDuck = currentDuck;
+            currentDuck = currentDuck->nextDuck;
+
         }
-        //if the position is first
-        if(previousPtr==NULL){
-            newPtr->nextPtr = *sPtr;
-            *sPtr = newPtr;
+
+        //if the location is first
+        if(previousDuck == NULL){
+            newDuck->nextDuck = *sPtr; //first link the pointer
+            *sPtr = newDuck; // change the head pointer
         }
 
+        //else
         else{
-            previousPtr->nextPtr = newPtr;
-            newPtr->nextPtr = currentPtr;
+            previousDuck->nextDuck =newDuck; //first link the prev pointer to new duck
+            newDuck->nextDuck =currentDuck; //second link the new duck's pointer to currentDuck
         }
     }
+
     else{
-        printf("%s not fished. No fishing line available.\n", d_name);
+        printf("%s not fished. No fishing line available\n",name);
+    }
+
+}
+
+
+char release_duck(DuckPtr *sPtr){
+    DuckPtr tempDuck, previousDuck, currentDuck;
+    char name[8];
+
+    printf("Enter the unwanted duck :\n");
+    scanf("%s", name);
+    //if the entered name is first member of list
+    if (strcmp(name, (*sPtr)->d_name)==0){
+        tempDuck = *sPtr; //헤더 Ptr을 임시로 저장합니다.
+        *sPtr = (*sPtr)->nextDuck; //해더 ptr의 주소를 두번째 멤버의 주소로 정의합니다.
+        free(tempDuck); //free로 메모리할당을 해제합니다.
+    }
+
+    else{
+        //초기 설정
+        previousDuck = *sPtr;
+        currentDuck = (*sPtr) -> nextDuck;
+
+        //입력한 이름과 같은 곳을 찾을 때까지 while문을 돌립니다.
+        while(currentDuck!= NULL && strcmp(currentDuck->d_name,name) != 0){
+            previousDuck = currentDuck;
+            currentDuck = currentDuck->nextDuck;
+        }
+        //free를 합니다.
+        if(currentDuck!=NULL){
+            tempDuck = currentDuck;
+            previousDuck->nextDuck = currentDuck->nextDuck;
+            free(tempDuck);
+        }
+        
     }
 }
 
-void show_duck(DuckPtr currentPtr){
-    char ASCII_P1[200]=NULL;
-    char ASCII_P2[200]=NULL;
-    char ASCII_P3[200]=NULL;
-    char ASCII_P4[200]=NULL;
-    char ASCII_P5[200]=NULL;
-    char ASCII_N6[200]=NULL;
-    int a = strlen(currentPtr->name);
-    int i;
+void show_ducks(DuckPtr sptr){
+    if(sptr == NULL){
+        printf("You don't have any ducks");
+    }
+    else{
+        while(sptr !=NULL){
+            printf("%s-->", sptr->d_name);
+            sptr = sptr->nextDuck;
+            if(sptr == NULL){
+                break;
+            }
+        }
+        printf("NULL\n\n");
+    }
 
-    if (currentPtr == NULL){
+}
+
+void animated_ducks(DuckPtr sptr){
+    char ASCII_P1[220]="";
+    char ASCII_P2[220]="";
+    char ASCII_P3[220]="";
+    char ASCII_P4[220]="";
+    char ASCII_P5[220]="";
+    char ASCII_N6[220]="";
+    int a = 0;
+
+    if (sptr == NULL){
         printf("Your fish line is empty");
     }
 
     else{
         printf("Your caught duck is\n");
-        while (currentPtr !=NULL){
+        while (sptr !=NULL){
             strcat(ASCII_P1, "       ,~~.         ");
             strcat(ASCII_P2, "      (  6 )-_,     ");
             strcat(ASCII_P3, " (\\___ )=='-'   ->  ");
             strcat(ASCII_P4, "  \\ .   ) )         ");
             strcat(ASCII_P5, "   \\ `-' /          ");
-            for (i=0 ; i < strlen(currentPtr->name)/4; i++)
-            strcat(ASCII_N6, "\t%s\t\t\t\t", currentPtr->name);
-            currentPtr = currentPtr->nextPtr;
+            strcat(ASCII_N6, "   11111111         ");
+            
+            sptr = sptr->nextDuck;
         }
 
         printf("%s\n", ASCII_P1);
@@ -145,5 +204,9 @@ void show_duck(DuckPtr currentPtr){
         printf("%s\n", ASCII_P4);
         printf("%s\n", ASCII_P5);
         printf("%s\n", ASCII_N6);
-    }
+    }    
+}
+
+int isEmpty(DuckPtr sPtr){
+    return sPtr==NULL;
 }
